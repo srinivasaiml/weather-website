@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rajahmundry Smart City Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <link rel="stylesheet" href="weather.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-city"></i> Smart City</h1>
+                <p>Rajahmundry Monitoring</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="overview">
+                    <i class="fas fa-th-large"></i>
+                    <span>Overview</span>
+                </li>
+                <li class="nav-item" data-view="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </li>
+                <li class="nav-item" data-view="map">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Live Map</span>
+                </li>
+                <li class="nav-item" data-view="traffic">
+                    <i class="fas fa-traffic-light"></i>
+                    <span>Traffic</span>
+                </li>
+                <li class="nav-item" data-view="environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>Environment</span>
+                </li>
+                <li class="nav-item" data-view="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </li>
+                <li class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-water"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="riverLevel">15.2m</div>
+                    <div class="stat-label">Godavari Level</div>
+                    <span class="stat-change up" id="riverChange">
+                        <i class="fas fa-arrow-up"></i> 2.3%
+                    </span>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-header">
+                        <div class="stat-icon success">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="aqiValue">68</div>
+                    <div class="stat-label">Air Quality Index</div>
+                    <span class="stat-change down" id="aqiChange">
+                        <i class="fas fa-arrow-down"></i> 5.1%
+                    </span>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-car"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="trafficCount">1,247</div>
+                    <div class="stat-label">Active Vehicles</div>
+                    <span class="stat-change up" id="trafficChange">
+                        <i class="fas fa-arrow-up"></i> 12.5%
+                    </span>
+                </div>
+
+                <div class="stat-card danger">
+                    <div class="stat-header">
+                        <div class="stat-icon danger">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="tempValue">28°C</div>
+                    <div class="stat-label">Temperature</div>
+                    <span class="stat-change up" id="tempChange">
+                        <i class="fas fa-arrow-up"></i> 1.2%
+                    </span>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="map-container">
+                    <div class="map-header">
+                        <h2><i class="fas fa-map-marker-alt"></i> Live City Map</h2>
+                        <div class="map-controls">
+                            <button class="map-btn active" data-layer="all">All</button>
+                            <button class="map-btn" data-layer="traffic">Traffic</button>
+                            <button class="map-btn" data-layer="environment">Environment</button>
+                            <button class="map-btn" data-layer="emergency">Emergency</button>
+                        </div>
+                    </div>
+                    <div id="cityMap"></div>
+                </div>
+
+                <div class="location-panel" id="locationPanel">
+                    <h3 style="color: var(--dark); margin-bottom: 1rem;">
+                        <i class="fas fa-info-circle"></i> Location Details
+                    </h3>
+                    <p style="color: #666; text-align: center; padding: 2rem;">
+                        Click on a location marker to view details
+                    </p>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-area"></i> Traffic Flow</h3>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" onclick="updateTrafficChart('24h')">24H</button>
+                            <button class="filter-btn" onclick="updateTrafficChart('7d')">7D</button>
+                            <button class="filter-btn" onclick="updateTrafficChart('30d')">30D</button>
+                        </div>
+                    </div>
+                    <canvas id="trafficChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> Air Quality Trend</h3>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" onclick="updateAQIChart('24h')">24H</button>
+                            <button class="filter-btn" onclick="updateAQIChart('7d')">7D</button>
+                            <button class="filter-btn" onclick="updateAQIChart('30d')">30D</button>
+                        </div>
+                    </div>
+                    <canvas id="aqiChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+                <div class="alerts-header">
+                    <h3><i class="fas fa-bell"></i> System Alerts</h3>
+                    <button class="filter-btn" onclick="clearAlerts()">
+                        <i class="fas fa-check-double"></i> Clear All
+                    </button>
+                </div>
+                <div id="alertsList">
+                    <div class="alert-item info">
+                        <div class="alert-icon info">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h4>System Initialized</h4>
+                            <p>All monitoring systems are online and functioning normally</p>
+                            <div class="alert-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="weather.js">
+        // Global variables
+        
+    </script>
+</body>
+</html>
